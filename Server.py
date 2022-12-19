@@ -13,4 +13,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             data = conn.recv(1024) # take the first 1024 byte, other than that can be junk
             if not data:
                 break
+            # Unlike send(), this method continues to send data from bytes until either all data has been sent or an error occurs.
+            # None is returned on success.
             conn.sendall(data)
