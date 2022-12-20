@@ -29,7 +29,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             name=url.split("?")[1].split("=")[1]
 
             print("fucntType", funcType,"\nname", name)
-            file = open("rooms.txt", 'r+')
+            
 
             if funcType == "/add":
                 print("add")
@@ -38,7 +38,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 # if it is exist, then print the error message
                 
                 lines = []
-                
+                file = open("rooms.txt", 'r')    
                 for line in file:
                     lines.append(line.strip())
 
@@ -59,8 +59,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 print("remove")
 
                 lines = []
+                file = open("rooms.txt", 'r')
                 for line in file:
                     lines.append(line.strip())
+
+                file.close()
 
                 for line in lines:
                     print(line)
@@ -69,18 +72,26 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     print("The room name is  not exist")
                 else:
                     print("The room name is  exist")                                        
-                    for line in lines:
-                        print(line)
-                    file.truncate(0) 
-                    for line in lines:
-                        if line== "null":
-                            continue
-                        if line.strip("\n") != name:
-                            file.write(line)
-                            file.write("\n")
-                    file.close()
-                
+                    
+                    
 
+                    file = open("rooms.txt", 'w')
+                    file.seek(0)
+                    lines.remove(name)
+                    for line in lines:                                                     
+                        file.write(line)
+                        file.write("\n")
+                    file.close()
+
+                    
+                #    with open("ids.txt", "r") as f:
+                #    lines = f.readlines()   
+                #    with open("ids.txt", "w") as f:
+                #    for line in lines:
+                #        if line.strip("\n") != "hasan":
+                #            f.write(line)
+                #
+            
 
                 
             elif funcType == "/reserve":
