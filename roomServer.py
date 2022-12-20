@@ -29,12 +29,62 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             name=url.split("?")[1].split("=")[1]
 
             print("fucntType", funcType,"\nname", name)
-
-
+            file = open("rooms.txt", 'r+')
 
             if funcType == "/add":
                 print("add")
-                            
+                # check the room name exist on the room.txt file 
+                # if it is not exist, then add the name to the room.txt file
+                # if it is exist, then print the error message
+                
+                lines = []
+                
+                for line in file:
+                    lines.append(line.strip())
+
+                for line in lines:
+                    print(line)
+                    
+                if lines.__contains__(name):
+                    print("The room name is already exist")
+                else:
+                    print("The room name is not exist")
+                    
+                    file.write(name)
+                    file.write("\n")
+                    print("The room name is added to the file")
+                    file.close()
+                                
+            elif funcType == "/remove":
+                print("remove")
+
+                lines = []
+                for line in file:
+                    lines.append(line.strip())
+
+                for line in lines:
+                    print(line)
+                    
+                if not lines.__contains__(name):
+                    print("The room name is  not exist")
+                else:
+                    print("The room name is  exist")                                        
+                    for line in lines:
+                        print(line)
+                    file.truncate(0) 
+                    for line in lines:
+                        if line== "null":
+                            continue
+                        if line.strip("\n") != name:
+                            file.write(line)
+                            file.write("\n")
+                    file.close()
+                
+
+
+                
+            elif funcType == "/reserve":
+                print("reserve")                    
 
             # Unlike send(), this method continues to send data from bytes until either all data has been sent or an error occurs.
             # None is returned on success.
@@ -44,4 +94,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
         # /add?name=activityname
         # /remove?name=activityname: 
+        # /reserve?name=roomname&day=x&hour=y&duration=z
+
         # /check?name=activityname
