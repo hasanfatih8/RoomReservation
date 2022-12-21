@@ -10,7 +10,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     # while sent < len(request):
     #     sent = sent + s.send(request[sent:])  # Send a portion of 'request', starting from 'sent' byte
    # s.send(b"GET / HTTP/1.1\r\nHOST\r\n\r\n")
-    s.sendall(b"/remove?name=hasan")
+    s.sendall(b"/checkavailability?name=bhdr&day=8")
     # sock.send(b"GET / HTTP/1.1\r\nHost:www.example.com\r\n\r\n")
     data = s.recv(1024)
 
