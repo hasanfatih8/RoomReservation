@@ -22,8 +22,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             print("The url is", url)
 
             funcType= url.split("?")[0]
+            print("The functype is", funcType)
+
             name=url.split("?")[1].split("=")[1]
-            
+            print("The name is", name)
+
             if funcType == "/add":              
                 lines = []
                 control = 0
