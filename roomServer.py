@@ -21,21 +21,24 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             print("The url is", url)
 
             funcType= url.split("?")[0]
-            name=url.split("?")[1].split("=")[1]
+            print("The functype is", funcType)
+
+            name=url.split("?")[1].split("=")[1] # [0] = name , [1] = roomname&day , [2] = 8
+            print("The name is", name)
             
             if funcType == "/add":
-                control = 0
+                isExists = 0
                 if os.path.exists('rooms.txt'):
                     lines = []
                     file = open("rooms.txt", 'r')                      
                     for line in file:
                         if(name == line.strip()):
                             print("The room name is already exist 403 atilcak")
-                            control = 1
+                            isExists = 1
                             file.close()
                             break
                 
-                if(control == 0):
+                if(isExists == 0):
                     file = open("rooms.txt", 'a')                   
                     file.write(name)
                     file.write("\n")
@@ -100,9 +103,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         print("invalid input 400 atilcak ROOM YOK ROOMS TXT DE")
                     else:
                         if(roomname == "" or int(day)>7 or int(day)<0 or int(hour)<9 or int(hour)+duration-1>17): #invalid input check
-                            print("invalid input 400 atilcak")
+                            print("invalid input day or hour is invalid /// 400 atilcak")
                         else:
-                            control = 0 #if room already reserved sets to 1
+                            isReserved = 0 #if room already reserved sets to 1
                             if os.path.exists('reservations.txt'):
                                 reservationFileRead = open("reservations.txt", "r")
                                 for line in reservationFileRead:
@@ -112,17 +115,17 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                         
                                         for i in range(0,hoursLength): #if starting hour of new reservation matches with other reservation                                                   
                                             if(elements[i + 2].strip() == hour):
-                                                control = 1     
+                                                isReserved = 1
                                                 break
                                         
                                         for j in range(0,hoursLength): #if end hour of new reservation matches with other reservation                                                                            
                                             if(elements[j + 2].strip() == str(int(hour) + duration - 1)):
-                                                control = 1     
+                                                isReserved = 1
                                                 break
-                                    if(control == 1):
+                                    if(isReserved == 1):
                                         break
                                 reservationFileRead.close()
-                            if(control == 1):
+                            if(isReserved == 1):
                                 print("already reserved 403 atilcak")
                             else:    
                                 reservationFile = open("reservations.txt", "a+")
@@ -138,7 +141,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     print("rooms file not exists")    
             
             elif funcType == "/checkavailability":
-                if os.path.exists('reservations.txt') or os.path.exists('rooms.txt'):
+                if os.path.exists('rooms.txt'):
                     roomname = name.split("&")[0]
                     endpoints = url.split("?")[1]
                     day = endpoints.split("&")[1].split("=")[1]
@@ -155,23 +158,26 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         print("room not found 404 atilcak ROOM YOK ROOMS TXT DE")
                     else:
                         if(int(day)>7 or int(day)<0): #invalid input check
-                            print("invalid input 400 atilcak")
+                            print("invalid input for day number /// 400 atilcak")
                         else:
-                            reservationFile = open("reservations.txt", "r")
-                            for line in reservationFile:    # finds reserved hours
-                                elements = line.split(" ")
-                                if(elements[0] == roomname and elements[1] == day):
-                                    hoursLength = len(elements) - 2                                                  
-                                    for i in range(0,hoursLength):                                                   
-                                        reservedHours.append(elements[i + 2].strip())
-                            reservationFile.close()
-                            availableHours = []  
-                            for i in range(0,9):    # finds available hours
-                                if(str(i+9) not in reservedHours):
-                                    availableHours.append(i+9)
-                            print("available hours: ", availableHours)
+                            if os.path.exists('reservations.txt'):
+                                reservationFile = open("reservations.txt", "r")
+                                for line in reservationFile:    # finds reserved hours
+                                    elements = line.split(" ")
+                                    if(elements[0] == roomname and elements[1] == day):
+                                        hoursLength = len(elements) - 2
+                                        for i in range(0,hoursLength):
+                                            reservedHours.append(elements[i + 2].strip())
+                                reservationFile.close()
+                                availableHours = []
+                                for i in range(0,9):    # finds available hours
+                                    if(str(i+9) not in reservedHours):
+                                        availableHours.append(i+9)
+                                print("available hours: ", availableHours)
+                            else:
+                                print("reservations file not exists")
                 else:
-                    print("rooms or reservations file not exists")
+                    print("rooms file not exists")
 
 
                 
