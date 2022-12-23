@@ -34,7 +34,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     file = open("activities.txt", 'r')    
                     for line in file:
                         if(name == line.strip()):
-                            print("The activity name is already exist 403 atilcak")
+                            #print("The activity name is already exist 403 atilcak")
+                            conn.sendall(b"HTTP/1.1 403 Forbidden\n")
                             control = 1
                             break
                     file.close()
@@ -43,7 +44,11 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     file = open("activities.txt", 'a')                   
                     file.write(name)
                     file.write("\n")
-                    print("The activity name is added to the file")
+                    conn.sendall(
+                        b"HTTP/1.1 200 OK\n" +
+                        b"Content-Type: text/html\n" +
+                        b"\n")
+                    # print("The activity name is added to the file")
                     file.close()
                                 
             elif funcType == "/remove":
@@ -56,9 +61,14 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     file.close()
 
                     if not lines.__contains__(name):
-                        print("The activity name is  not exist")
+                        conn.sendall(b"HTTP/1.1 403 Forbidden\n")
+                        # print("The activity name is  not exist")
                     else:
-                        print("The activity name is  exist")                                        
+                        conn.sendall(
+                            b"HTTP/1.1 200 OK\n" +
+                            b"Content-Type: text/html\n" +
+                            b"\n")
+                        #print("The activity name is  exist")
 
                         file = open("activities.txt", 'w')
                         file.seek(0)
@@ -68,7 +78,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             file.write("\n")
                         file.close()
                 else:
-                    print("file not exists.")
+                    conn.sendall(b"HTTP/1.1 404 Not Found\n")
+                    # print("file not exists.")
                 
             elif funcType == "/check":
                 if os.path.exists('activities.txt'):
@@ -76,13 +87,20 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     file = open("activities.txt", 'r')
                     for line in file:
                         if(line.strip() == name):
-                            print("there exists activity")
+                            conn.sendall(
+                                b"HTTP/1.1 200 OK\n" +
+                                b"Content-Type: text/html\n" +
+                                b"\n")
+                            #print("there exists activity")
                             control = 1
                             break        
                     if(control == 0):
-                        print("not found 404 dön")
+                        conn.sendall(b"HTTP/1.1 403 Forbidden\n")
+                        #print("not found 404 dön")
                     file.close()
                 else:
-                    print("file not exists.")
+                    conn.sendall(b"HTTP/1.1 404 Not Found\n")
+                    #print("file not exists.")
             
-            conn.sendall(data)
+            else:
+                conn.sendall(b"HTTP/1.1 400 Bad Request\n")
