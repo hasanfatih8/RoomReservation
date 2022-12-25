@@ -1,7 +1,7 @@
 import socket
 
-HOST = "127.0.0.1"  # the server's hostname or IP address
-PORT = 9999  # the port used by the server
+HOST = "localhost"  # the server's hostname or IP address
+PORT = 8080  # the port used by the server
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((HOST, PORT))
@@ -9,8 +9,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     # sent = 0
     # while sent < len(request):
     #     sent = sent + s.send(request[sent:])  # Send a portion of 'request', starting from 'sent' byte
-   # s.send(b"GET / HTTP/1.1\r\nHOST\r\n\r\n")
-    s.sendall(b"/reserve?room=hsn&activity=zort&day=2&hour=10&duration=1")
+    # s.send(b"GET / HTTP/1.1\r\nHOST\r\n\r\n")
+    s.sendall(b"/reserve?room=emine&activity=zort&day=3&hour=11&duration=1")
+    #s.sendall(b"/listavailability?room=emine&day=2")
     # sock.send(b"GET / HTTP/1.1\r\nHost:www.example.com\r\n\r\n")
     data = s.recv(1024)
 
