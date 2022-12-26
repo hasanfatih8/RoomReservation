@@ -156,7 +156,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                     b"Content-Type: text/html\n" +
                                     b"\n")
                 else:
-                    conn.sendall(b"HTTP/1.1 404 Not Found\n")
+                    conn.sendall(b"HTTP/1.1 404 Not Found\n") #not necessary i think
             elif funcType == "/checkavailability":
                 if os.path.exists('rooms.txt'):
                     roomname = name.split("&")[0]

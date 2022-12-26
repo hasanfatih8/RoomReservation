@@ -99,12 +99,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             control = 1
                             break
                     if(control == 0):
-                        conn.sendall(b"HTTP/1.1 403 Forbidden\n")
-                        # print("not found 404 dön")
+                        conn.sendall(b"HTTP/1.1 404 Not Found\n")
+                        print("not found in activity.txt")
                     file.close()
                 else:
-                    conn.sendall(b"HTTP/1.1 404 Not Found\n")
-                    # print("file not exists.")
+                    conn.sendall(b"HTTP/1.1 404 Not Found\n") #i think not necessary
+                    print("activity.txt file does not exist")
 
             else:
                 conn.sendall(b"HTTP/1.1 400 Bad Request\n")
