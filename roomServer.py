@@ -84,7 +84,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     #print("file not exists")
                     conn.sendall(b"HTTP/1.1 404 Not Found\n")
             elif funcType == "/reserve":
-                print(  "-------- reserve from room server--------")
                 if os.path.exists('rooms.txt'):    
                     roomname = name.split("&")[0]
                     endpoints = url.split("?")[1]
@@ -92,27 +91,17 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     hour = endpoints.split("&")[2].split("=")[1]
                     duration = int(endpoints.split("&")[3].split("=")[1])
                     controlForRoom = 0
-                    rooms = open("rooms.txt", 'r') 
-
-                    print("roomname", roomname,
-                        "day", day,
-                        "hour", hour,
-                        "duration", duration
-                        )
-                    for line in rooms:
-                        print(line.split(" ")[0])
-                        if line.split(" ")[0].strip() == roomname:
+                    rooms = open("rooms.txt", 'r')    
+                    for line in rooms:  # checks whether room exists or not BU LAZIM MI EMİN DEĞİLİM
+                        if line.strip() == roomname:
                             controlForRoom = 1
                             break
                     rooms.close()
-                    print("controlForRoom", controlForRoom)
-
-                    if(controlForRoom == 0):
+                    if(controlForRoom == 0):   
                         conn.sendall(b"HTTP/1.1 404 Not Found\n")
-                        
                     else:
                         if(roomname == "" or int(day)>7 or int(day)<0 or int(hour)<9 or int(hour)+duration-1>17): #invalid input check
-                            print("invalid input day or hour is invalid /// 400 atilcak")
+                            print("invalid input 400 atilcak")
                             conn.sendall(b"HTTP/1.1 400 Bad Request\n")
                         else:
                             isReserved = 0 #if room already reserved sets to 1
@@ -120,43 +109,32 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                 reservationFileRead = open("reservations.txt", "r")
                                 for line in reservationFileRead:
                                     elements = line.split(" ")
-                                    if(elements[0] == roomname and elements[1] == day):
-                                        hoursLength = len(elements) - 2                       
+                                    if(elements[1] == roomname and elements[3] == day):
+                                        hoursLength = len(elements) - 4                       
+
                                         for i in range(0,hoursLength): #if starting hour of new reservation matches with other reservation                                                   
-                                            if(elements[i + 2].strip() == hour):
-                                                isReserved = 1
+                                            if(elements[i + 4].strip() == hour):
+                                                isReserved = 1     
                                                 break
-                                            
+
                                         for j in range(0,hoursLength): #if end hour of new reservation matches with other reservation                                                                            
-                                            if(elements[j + 2].strip() == str(int(hour) + duration - 1)):
-                                                isReserved = 1
+                                            if(elements[j + 4].strip() == str(int(hour) + duration - 1)):
+                                                isReserved = 1     
                                                 break
                                     if(isReserved == 1):
                                         break
                                 reservationFileRead.close()
                             if(isReserved == 1):
-                                #print("already reserved 403 atilcak")
-                                print("already reserved")
+                                print("already reserved 403 atilcak")
                                 conn.sendall(b"HTTP/1.1 403 Forbidden\n")
                             else:
-                                print("add room reservation to rooms.txt")
-                                roomsFile = open("roomReservations.txt", "a+")
-                                reservation = (roomname + " " + str(day) +  " " + str(hour) + " " + str(duration))
-                                # for debug
-                                print(reservation)
-                                roomsFile.write(reservation)
-                               #for i in range(1,duration):
-                               #    hours = int(hour) + i
-                               #    reservationFile.write(str(hours))
-                               #    reservationFile.write(" ")
-                                roomsFile.write("\n")
-                                roomsFile.close()
                                 conn.sendall(
                                     b"HTTP/1.1 200 OK\n" +
                                     b"Content-Type: text/html\n" +
                                     b"\n")
+                            
                 else:
-                    conn.sendall(b"HTTP/1.1 404 Not Found\n")
+                    conn.sendall(b"HTTP/1.1 404 Not Found\n")    
             elif funcType == "/checkavailability":
                 if os.path.exists('rooms.txt'):
                     roomname = name.split("&")[0]

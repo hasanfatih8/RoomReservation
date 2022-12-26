@@ -99,7 +99,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             control = 1
                             break
                     if(control == 0):
-                        conn.sendall(b"HTTP/1.1 403 Forbidden\n")
+                        conn.sendall(b"HTTP/1.1 404 Not Found\n")
                         # print("not found 404 dön")
                     file.close()
                 else:
