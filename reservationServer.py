@@ -112,8 +112,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 s.sendall(b"HTTP 400 Bad Request")
 
 
-
-
+# hasan branch
 
 #def contactRoomServer(day):
 #    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socket1:
