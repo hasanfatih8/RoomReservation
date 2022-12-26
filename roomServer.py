@@ -166,9 +166,17 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                             reservedHours.append(elements[i + 2].strip())
                                 roomsFile.close()
                                 availableHours = []
+                                availableHoursReturn = ""
                                 for i in range(0,9):    # finds available hours
                                     if(str(i+9) not in reservedHours):
                                         availableHours.append(i+9)
+
+                                for i in availableHours:
+                                    availableHoursReturn += str(i) + " "
+
+                                conn.sendall(b"HTTP/1.1 200 OK\n" 
+                                             b"Content-Type: text/html\n" 
+                                             b"\n" + availableHoursReturn.encode()) 
                                 print("available hours: ", availableHours)
                             else:
                                 conn.sendall(b"HTTP/1.1 400 Bad Request\n")
