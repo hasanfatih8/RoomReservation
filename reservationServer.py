@@ -18,13 +18,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 break
             url= data.decode("utf-8")
             print("The url is", url)
-
-            # url can be like this:
-            #/reserve?    room   =    roomname&activity    =    activityname&day    =    x&hour    =    y&duration    =    z:
-            #/listavailability?room=roomname&day=x:
-            #/listavailability?room=roomname:
-            #/display?id=reservation_id:
-
+            
             reservationId = 0
 
             funcType= url.split("?")[0] #/display #/reserve
@@ -36,7 +30,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             if(funcType == "/reserve"):
                 print("---------------------- reserve from reservation server -----------------------------")
                 roomName = name.split("&")[0]
-                #/reserve  ?   room=roomname    &    activity=activityname    &    day=x    &     hour=y    &    duration=z:
+
                 endPoints = url.split("?")[1]
 
                 activityName = endPoints.split("&")[1].split("=")[1]
@@ -94,21 +88,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                 reservationId += 1
 
                                 conn.sendall(b"HTTP/1.1 200 OK")
-   
-                                """
-                                If all the inputs are valid, then it either reserves the room and sends back an HTTP 200 OK message
-                                it sends back an HTTP 403 Forbidden message indicating that the room is not available.
-                                
-                                If the room is reserved, a reservation_id is generated (which can be 
-                                an integer), and an entry is stored for the reservation_id.
-                                
-                                # burayı anlamadım ama aşağıda reserve ediyorum id oluşturcam txt'ye yazcam
-                                print("HTTP 200 OK message will be sent, reservation is done with the following informations")
-                                with open("reservationDone.txt", "w") as doneReservations:
-                                    doneReservations.write(f"{roomName} is reserved for {activityName} on {day}st/nd/rd/th of the "
-                                                            f"week between {hour} - {hour+1} for {duration} hour with the ID {reservationId}")
-                                """
-                                
             
             elif funcType == "/listavailability": #/listavailability?room=roomname&day=x:
                 print("------ listavailability -------")
