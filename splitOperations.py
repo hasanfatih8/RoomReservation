@@ -14,8 +14,8 @@ def splitURL(url)          :
 
     if name[-1] == "~":
         name = name[:-1]
-
-    return funcType,name
+    requestLine = requestLine.split(" ")[1]
+    return requestLine,funcType,name
 
 
 def responseMessageFormat(statu,title,bodyMessage):
@@ -24,7 +24,7 @@ def responseMessageFormat(statu,title,bodyMessage):
     response  =  b"HTTP/1.1 "+statu+b"\n"
     response +=  b"Content-Type: text/html\n\n"     
     response +=  b"<html>"
-    response +=  b"<head><title>"+title+"</title></head>"
+   # response +=  b"<head><title>"+title+b"</title></head>"
     response +=  b"<body>"+bodyMessage+b"</body>"                
     response +=  b"</html>"
     

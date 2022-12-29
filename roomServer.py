@@ -25,7 +25,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             url= data.decode("utf-8")
             print("The url is", url)
           
-            funcType,name=splitURL(url)           
+            requestLine,funcType,name=splitURL(url)           
 
             if funcType == "/add":
                 isExists = 0
@@ -34,7 +34,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     file = open("rooms.txt", 'r')                      
                     for line in file:
                         if(name == line.strip()):                                                        
-                            response=responseMessageFormat(b"400 Bad Request",b"Room name is already exist")              
+                            response=responseMessageFormat(b"400 Bad Request",b"title",b"Room name is already exist")              
                             conn.sendall(response)
                             isExists = 1
                             file.close()
@@ -45,7 +45,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     file.write(name)
                     file.write("\n")
 
-                    response =responseMessageFormat(b"200 OK",b"Room name is added")    
+                    response =responseMessageFormat(b"200 OK",b"title",b"Room name is added")    
                     conn.sendall(response)
 
                     file.close()
@@ -60,7 +60,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         print(line)
                     if not lines.__contains__(name):
 
-                        response =responseMessageFormat(b"404 Not Found",b"Room name is not exist")
+                        response =responseMessageFormat(b"404 Not Found",b"title",b"Room name is not exist")
                         conn.sendall(response)
                     else:
                         print("The room name is  exist")                                        
@@ -72,40 +72,51 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             file.write("\n")
                         file.close()
 
-                        response =responseMessageFormat(b"200 OK",b"Room name is removed")             
+                        response =responseMessageFormat(b"200 OK",b"title",b"Room name is removed")             
                         conn.sendall(response)
                 else:
-                    response =responseMessageFormat(b"404 Not Found",b"Room name is not exist")
+                    response =responseMessageFormat(b"404 Not Found",b"title",b"Room name is not exist")
                     conn.sendall(response)
             elif funcType == "/reserve":
-                if os.path.exists('rooms.txt'):    
-                    roomname = name.split("&")[0]
-                    endpoints = url.split("?")[1]
-                    day = endpoints.split("&")[1].split("=")[1]
-                    hour = endpoints.split("&")[2].split("=")[1]
-                    duration = int(endpoints.split("&")[3].split("=")[1])
+                if os.path.exists('rooms.txt'):  
+                    
+                    roomname = name.split("&")[0].strip()
+                    endpoints = requestLine.split("?")[1]
+                    day = endpoints.split("&")[1].split("=")[1].strip()
+                    hour = endpoints.split("&")[2].split("=")[1].strip ()
+                    duration = int(endpoints.split("&")[3].split("=")[1].strip())
+
+                    print("roomname",roomname,"day",day,"hour",hour,"duration",duration)
                     controlForRoom = 0
                     rooms = open("rooms.txt", 'r')    
                     for line in rooms:  # checks whether room exists or not BU LAZIM MI EMİN DEĞİLİM
+                        print("line",line,"roomname",roomname)
                         if line.strip() == roomname:
                             controlForRoom = 1
                             break
                     rooms.close()
+
+                    print("controlForRoom",controlForRoom)
                     if(controlForRoom == 0):   
-                        response =responseMessageFormat(b"404 Not Found",b"Room name is not exist")
+                        response =responseMessageFormat(b"404 Not Found",b"title",b"Room name is not exist")
                         conn.sendall(response)
                     else:
                         if(roomname == "" or int(day)>7 or int(day)<0 or int(hour)<9 or int(hour)+duration-1>17): #invalid input check
                             print("invalid input 400 atilcak")
                             
-                            response =responseMessageFormat(b"400 Bad Request",b"Invalid input")
+                            response =responseMessageFormat(b"400 Bad Request",b"title",b"Invalid input")
                             conn.sendall(response)
                         else:
                             isReserved = 0 #if room already reserved sets to 1
                             if os.path.exists('reservations.txt'):
+                                print("reservations.txt exists")
                                 reservationFileRead = open("reservations.txt", "r")
+
+
                                 for line in reservationFileRead:
+                                    print("line",line)
                                     elements = line.split(" ")
+
                                     if(elements[1] == roomname and elements[3] == day):
                                         hoursLength = len(elements) - 4                       
 
@@ -118,25 +129,30 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                             if(elements[j + 4].strip() == str(int(hour) + duration - 1)):
                                                 isReserved = 1     
                                                 break
-                                    if(isReserved == 1):
+                                    if(isReserved == 1):                                                                                
                                         break
                                 reservationFileRead.close()
+
+                                
+
+                            print("isReserved",isReserved)
                             if(isReserved == 1):
                                 print("already reserved 403 atilcak")
-                                response =responseMessageFormat(b"403 Forbidden",b"Room is already reserved")
+                                response =responseMessageFormat(b"403 Forbidden",b"title",b"Room is already reserved")
                                 conn.sendall(response)
                             else:
-                                response =responseMessageFormat(b"200 OK",b"Room is reserved")
+                                print("reserved 200 atilcak")
+                                response =responseMessageFormat(b"200 OK",b"title",b"Room is reserved")
                                 conn.sendall(response)
                             
                 else:
-                    response =responseMessageFormat(b"404 Not Found",b"Room name is not exist")
+                    response =responseMessageFormat(b"404 Not Found",b"title",b"Room name is not exist")
                     conn.sendall(response)
             elif funcType == "/checkavailability":
                 if os.path.exists('rooms.txt'):
-                    roomname = name.split("&")[0]
-                    endpoints = url.split("?")[1]
-                    day = endpoints.split("&")[1].split("=")[1]
+                    roomname = name.split("&")[0].strip()
+                    endpoints = requestLine.split("?")[1]
+                    day = endpoints.split("&")[1].split("=")[1].strip()
                     reservedHours = []
                     controlForRoom = 0
                     rooms = open("rooms.txt", 'r')
@@ -147,13 +163,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     rooms.close()
                     if(controlForRoom == 0):
                         #print("room not found 404 atilcak ROOM YOK ROOMS TXT DE")
-                        response =responseMessageFormat(b"404 Not Found",b"Room name is not exist")
+                        response =responseMessageFormat(b"404 Not Found",b"title",b"Room name is not exist")
                         conn.sendall(response)
 
                     else:
                         if(int(day)>7 or int(day)<0): #invalid input check
                            # print("invalid input for day number /// 400 atilcak")
-                            response =responseMessageFormat(b"400 Bad Request",b"Invalid input")
+                            response =responseMessageFormat(b"400 Bad Request",b"title",b"Invalid input")
                             conn.sendall(response)
                         else:
                             if os.path.exists('reservations.txt'):
@@ -185,7 +201,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                                 
                             else:
-                                response =responseMessageFormat(b"200 OK",b"Room is available")
+                                response =responseMessageFormat(b"200 OK",b"title",b"Room is available")
                                 conn.sendall(response)
             elif funcType == "/get": #listavailability?room=roomname
                 print("-------get request to room server-------")
@@ -203,13 +219,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         break
                 if isExist==False:
                     print("The room name is not exist")
-                    response =responseMessageFormat(b"404 Not Found",b"Room name is not exist")
+                    response =responseMessageFormat(b"404 Not Found",b"title",b"Room name is not exist")
                     conn.sendall(response)
                 else:
-                    response =responseMessageFormat(b"200 OK",b"Room is exist")
+                    response =responseMessageFormat(b"200 OK",b"title",b"Room is exist")
                     conn.sendall(response)
             else:
-                response =responseMessageFormat(b"400 Bad Request",b"Invalid input")
+                response =responseMessageFormat(b"400 Bad Request",b"title",b"Invalid input")
                 conn.sendall(response)
 
 
