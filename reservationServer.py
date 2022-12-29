@@ -1,5 +1,6 @@
 import socket
 import os
+from splitOperations import *
 
 HOST = "localhost"
 PORT = 8080
@@ -198,7 +199,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         conn.sendall(b"HTTP/1.1 404 Not Found\n")
                         print("404 from display")
             else:
-                s.sendall(b"HTTP 400 Bad Request")
+                response = responseFormatter("400 Bad Request", "Welcome", "Welcome to our reservation server, please type proper commands in the URL bar.")
+                conn.sendall(response)
 
 
 # hasan branch
