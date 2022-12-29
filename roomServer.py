@@ -34,7 +34,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     file = open("rooms.txt", 'r')                      
                     for line in file:
                         if(name == line.strip()):                                                        
-                            response=responseMessageFormat(b"400 Bad Request",b"title",b"Room name is already exist")              
+                            response=responseMessageFormat(b"400 Bad Request",b"Room Added",b"Room name is already exist")              
                             conn.sendall(response)
                             isExists = 1
                             file.close()
