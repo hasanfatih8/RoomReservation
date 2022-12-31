@@ -1,106 +1,245 @@
 import socket
 import os
-HOST = "127.0.0.1"
-PORT = 9999
-# with command, we don't need to use try catch blocks
+from splitOperations import *
+
+HOST = "localhost"
+PORT = 8080
+ 
+# store the ID in a file
+def store_id(id):
+    with open('id.txt', 'w') as f:
+        f.write(str(id))
+
+# retrieve the ID from a file
+def get_id():
+    if not os.path.exists('id.txt') or os.stat('id.txt').st_size == 0:
+        return 0
+    with open('id.txt', 'r') as f:
+        id = int(f.read())
+    return id
+
+# increase the ID by 1 and store it
+def increase_id():
+    id = int(get_id())
+    id += 1
+    store_id(id)
 
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
     s.bind((HOST, PORT))
     s.listen() # if you put any number in this function ex: 5, it means that it will listen 5 connections after that it is going to throw an error
-    conn, addr = s.accept() #connection object will be stored in conn, list of ip addresses will be storedin addr
-    with conn:
-        print(f"Connected by {addr}")
-        while True:
-
+    while True:
+        conn, addr = s.accept() #connection object will be stored in conn, list of ip addresses will be storedin addr
+        with conn:
+            print(f"Connected by {addr}")
+            
             data = conn.recv(1024) # take the first 1024 byte, other than that can be junk
             if not data:
                 break
             url= data.decode("utf-8")
             print("The url is", url)
-            #/reserve?    room   =    roomname&activity    =    activityname&day    =    x&hour    =    y&duration    =    z:
-            #/listavailability?room=roomname&day=x:
-            #/listavailability?room=roomname:
-            #/display?id=reservation_id:
-            reservationId = 0
-            funcType= url.split("?")[0] #/display #/reserve
-            print("The functype is", funcType)
+            
+            reservationId = get_id()
+
+            requestLine,funcType,unnecessary=splitURL(url)
+            print("The request line is", requestLine)
+            print("The function type is", funcType)
 
             name=url.split("?")[1].split("=")[1] # [0] = id , [1] = reservation_id |||| [0] =
+            
             print("The name is", name)
-
+            # -----------------------------------------------------------------------------------------------------
             if(funcType == "/reserve"):
-                if os.path.exists("activities.txt"):
-                    roomName = name.split("&")[0]
-                    #/reserve  ?   room=roomname    &    activity=activityname    &    day=x    &     hour=y    &    duration=z:
-                    endPoints = url.split("?")[1]
-                    activityName = endPoints.split("&")[1].split("=")[1]
-                    day =  int(endPoints.split("&")[2].split("=")[1])
-                    hour =  int(endPoints.split("&")[3].split("=")[1])
-                    duration =  int(endPoints.split("&")[4].split("=")[1])
-                    isActivityExist = False
-                    with open("activities.txt", "r") as activityFile:
-                        for line in activityFile:  # checks whether room exists or not BU LAZIM MI EMİN DEĞİLİM
-                            if line.strip() == activityName:
-                                isActivityExist = True
-                                break
-                    if not isActivityExist:
-                        print(f"ERROR {activityName} activity doesn't exist HTTP 404 Not Found message throw")
-                    else:
-                        if os.path.exists("rooms.txt"):
-                            ##### maybe it is not necessary since we already check whether room exists or not #####
-                            isRoomExist = False
-                            with open("rooms.txt", "r") as roomFile:
-                                for line in roomFile:  # checks whether room exists or not BU LAZIM MI EMİN DEĞİLİM
-                                    if line.strip() == roomName:
-                                        isRoomExist = True
-                                        break
-                            if not isRoomExist:
-                                print(f"ERROR {roomName} room doesn't exist HTTP NE MESAJI YOLLUCAZ PDFTE SÖYLEMİYO 404 Not Found message throw")
-                            else:
-                                if (roomName == "" or
-                                    day > 7 or
-                                    day < 0 or
-                                    hour < 9 or
-                                    hour + duration - 1 > 17
-                                    ):  # invalid input check
-                                    print("invalid input day or hour is invalid /// 400 atilcak")
-                                else:
-                                    """
-                                    If all the inputs are valid, then it either reserves the room and sends 
-                                    back an HTTP 200 OK message, or it sends back an HTTP 403 Forbidden message indicating 
-                                    that the room is not available. If the room is reserved, a reservation_id is generated (which can be 
-                                    an integer), and an entry is stored for the reservation_id.
-                                    """
-                                    # burayı anlamadım ama aşağıda reserve ediyorum id oluşturcam txt'ye yazcam
-                                    print("HTTP 200 OK message will be sent, reservation is done with the following informations")
-                                    with open("reservationDone.txt", "w") as doneReservations:
-                                        doneReservations.write(f"{roomName} is reserved for {activityName} on {day}st/nd/rd/th of the "
-                                                               f"week between {hour} - {hour+1} for {duration} hour with the ID {reservationId}")
-                                        reservationId += 1
-            elif funcType == "/listavailability":
-                #/listavailability     ?      room=roomname    &     day=x:
-
+                print("---------------------- reserve from reservation server -----------------------------")
                 roomName = name.split("&")[0]
+
                 endPoints = url.split("?")[1]
-                day = int(endPoints.split("&")[2].split("=")[1])
 
-                # konuşalım buraları ona göre devam ettircem
+                activityName = endPoints.split("&")[1].split("=")[1]
+                day =  int(endPoints.split("&")[2].split("=")[1])
+                hour =  int(endPoints.split("&")[3].split("=")[1])
+                duration =  int(endPoints.split("&")[4].split("=")[1].split(" ")[0])
+
+                print ("roomName: ", roomName)                                        
+                print ("activityName: ", activityName)
+                print ("day: ", day)
+                print ("hour: ", hour)
+                print ("duration: ", duration)
+                
+                # checks activity 
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketOfActivityServer:
+                    socketOfActivityServer.connect((HOST, 8082))                        
+                    socketOfActivityServer.sendall(b"GET /check?name="+ activityName.encode() +
+                                                   b" HTTP/1.1")
+                    response = socketOfActivityServer.recv(1024).decode("utf-8")
+                    print(response.split(" ")[1])
+                    socketOfActivityServer.close()                    
+                    if response.split(" ")[1].strip() == "404":
+                        response = responseFormatter("404 Not Found", "Activity Check", f"404 Not Found")
+                        conn.sendall(response)    
+                        #conn.sendall(b"HTTP/1.1 404 Not Found\n")
+                        print("404 come from activity server")
+                    
+                    elif response.split(" ")[1].strip() == "200":                                              
+                        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketOfRoomServer:
+                            socketOfRoomServer.connect((HOST, 8081))                                  
+                            socketOfRoomServer.sendall(b"GET /reserve?room="+roomName.encode() +
+                                                       b"&day=" + str(day).encode() +
+                                                       b"&hour=" + str(hour).encode() +
+                                                       b"&duration=" + str(duration).encode() + 
+                                                       b" HTTP/1.1")
+
+                            response = socketOfRoomServer.recv(1024).decode("utf-8")
+                            print("Received from room server: ", response)    
+                            print("Received from room server: ", response)    
+                            print("Received from room server: ", response)    
+                            print("Received from room server: ", response)    
+                            print("Received from room server: ", response)    
+                            responseStatus=  response.split(" ")[1].strip()                                
+                            socketOfRoomServer.close()
+
+                        if  responseStatus== "403":                   #maybe except 200 are unnecessary                                         
+                            conn.sendall(b"HTTP/1.1 403 Forbidden\n") 
+                            print("403 from room") 
+                        elif responseStatus == "404":
+                            conn.sendall(b"HTTP/1.1 404 Not Found\n")
+                            print("404 from room")
+                        elif responseStatus == "400":
+                            conn.sendall(b"HTTP/1.1 400 Bad Request\n") 
+                            print("400 from room")
+                        elif responseStatus == "200":
+                                with open("reservations.txt", "a+") as reservations:
+                                    reservations.write(f"{reservationId} {roomName} {activityName} {day} {hour} ")
+                                    for i in range(1,duration):
+                                        hours = int(hour) + i                 
+                                        reservations.write(str(hours) + " ")                                       
+                                    reservations.write("\n")
+
+                                increase_id()
+                                response = responseFormatter("200 OK", "Reservation Succesful", f"Room {roomName} is reserved for activity {activityName} on day {day} at {hour} for {duration} hours. \n your Reservation ID: {reservationId}")
+                                conn.sendall(response)
+                                #conn.sendall(b"HTTP/1.1 200 OK")
+            
+            #elif funcType == "/listavailability": #/listavailability?room=roomname&day=x:
+            #    print("------ listavailability -------")
+            #    
+            #    #name = name.split("?")[1].split("&")[0]
+            #    #day = int(url.split("=")[1])
+            #    
+            #    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketOfRoomServer:
+            #        socketOfRoomServer.connect((HOST, 8081))                                    
+            #
+            #        socketOfRoomServer.sendall(b"/get?room=emine")
+            #        response = socketOfRoomServer.recv(1024).decode("utf-8")
+            #        print("Received from room server: ", response)   
+            #
+            #        socketOfRoomServer.close()
+            
+            elif funcType == "/listavailability":    #/listavailability?room=roomname  
+                                                     #/listavailability?room=roomname&day=x:             
+                print ("------ listavailability -------")
+                endPoints = url.split("?")[1]
+                # if we want to get information about a specific day
+                if(endPoints.__contains__("&")):
+                    roomName = endPoints.split("&")[0].split("=")[1]
+                    day = int(endPoints.split("&")[1].split("=")[1].split(" ")[0])
+                    print ("roomName: ", roomName)
+                    print ("day: ", day)
+                    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketOfRoomServer:
+                        socketOfRoomServer.connect((HOST, 8081))                        
+                        socketOfRoomServer.sendall(b"GET /checkavailability?room="+roomName.encode() + 
+                                                   b"&day=" + str(day).encode() + 
+                                                   b" HTTP/1.1")
+                        response = socketOfRoomServer.recv(1024).decode("utf-8")
+                        print("Received from room server: ", response)    
+                        responseStatus =  response.split(" ")[1].strip()                                
+                        socketOfRoomServer.close()
+
+                        if  responseStatus== "403":                   #maybe except 200 are unnecessary                                         
+                            conn.sendall(b"HTTP/1.1 403 Forbidden\n") 
+                            print("403 from room") 
+                        elif responseStatus == "404":
+                            conn.sendall(b"HTTP/1.1 404 Not Found\n")
+                            print("404 from room")
+                        elif responseStatus == "400":
+                            conn.sendall(b"HTTP/1.1 400 Bad Request\n") 
+                            print("400 from room")
+                        elif responseStatus == "200":
+                            conn.sendall(b"HTTP/1.1 200 OK\n" + response.encode())
+                else:
+                    roomName = endPoints.split("=")[1]
+                    print ("roomName: ", roomName)
+                    for day in range(1,8):
+                        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketOfRoomServer:
+                            socketOfRoomServer.connect((HOST, 8081))      
+                                            
+                            socketOfRoomServer.sendall(b"GET /checkavailability?room="+roomName.encode() + 
+                                                       b"&day=" + str(day).encode() +
+                                                       b" HTTP/1.1")
+                            """
+                            # Build the query string
+                            query_string = "room=" + roomName + "&day=" + str(day)
+                            # Build the GET request
+                            request = "GET /checkavailability?" + query_string + " HTTP/1.1\r\n"
+                            # Send the request
+                            socketOfRoomServer.sendall(request.encode())
+                            """  
+                            response = socketOfRoomServer.recv(1024).decode("utf-8")
+                            print("Received from room server: ", response)    
+                            responseStatus=  response.split(" ")[1].strip()                                
+                            socketOfRoomServer.close()
+
+                            if  responseStatus== "403":
+                                conn.sendall(b"HTTP/1.1 403 Forbidden\n") 
+                                print("403 from room") 
+                            elif responseStatus == "404":
+                                conn.sendall(b"HTTP/1.1 404 Not Found\n")
+                                print("404 from room")
+                            elif responseStatus == "400":
+                                conn.sendall(b"HTTP/1.1 400 Bad Request\n") 
+                                print("400 from room")
+                            elif responseStatus == "200":
+                                conn.sendall(b"HTTP/1.1 200 OK\n" + response.encode())
+
+            elif funcType == "/display": #/display?id=reservation_id:
+                print("------ display -------")
+                endPoints = url.split("?")[1]
+                id = name.split(" ")[0]
+                print("id: ", id)
+                with open("reservations.txt", "r") as reservations:
+                    for line in reservations:
+                        if line.split(" ")[0] == id:
+                            arr = line.split(" ")
+                            duration = 1
+                            if(arr[5] == "\n"):
+                                duration = 1
+                            else:
+                                duration = int(arr[-2])-int(arr[4])
+                            print(arr)
+                            response = responseFormatter("200 OK", "Display", f"Reservation ID: {id}, Room: {line.split(' ')[1]}, Activity: {line.split(' ')[2]}, When: day{line.split(' ')[3]} {line.split(' ')[4]}:00 - {str(int(arr[4])+duration)}:00")
+                            conn.sendall(response)
+                            """
+                            conn.sendall(b"HTTP/1.1 200 OK\n"+
+                                         b"&id=" + line.split(" ")[0].encode()+
+                                         b"&roomname=" + line.split(" ")[1].encode()+
+                                         b"&activityname=" + line.split(" ")[2].encode()+
+                                         b"&day=" + line.split(" ")[3].encode()+
+                                         b"&hour=" + line.split(" ")[4].encode()+
+                                         b"&until=" + line.split(" ")[-1].encode())
+                            """
+                            # 1 emine act1 6 13 14 15 16 
+                            print("200 from display")
+                            break
+                    else:
+                        response = responseFormatter("404 Not Found", "Display", f"Reservation ID {id} does not exist.")
+                        conn.sendall(response)
+                        print("404 from display")
+            else:
+                response = responseFormatter("400 Bad Request", "Welcome", "Welcome to our reservation server, please type proper commands in the URL bar.")
+                conn.sendall(response)
 
 
-
-
-
-
-
-            # Unlike send(), this method continues to send data from bytes until either all data has been sent or an error occurs.
-            # None is returned on success.
-            conn.sendall(data)
-
-
-
-
-
+# hasan branch
 
 
 
