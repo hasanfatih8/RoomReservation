@@ -37,7 +37,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     file = open("rooms.txt", 'r')                      
                     for line in file:
                         if(name == line.strip()):                                                        
-                            response = responseFormatter("400 Bad Request", "Room Added", f"Room {name} is already exist")              
+                            response = responseFormatter("400 Bad Request", "Room Add", f"Room {name} is already exist")              
                             conn.sendall(response)
                             isExists = 1
                             file.close()
@@ -63,7 +63,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         print(line)
                     if not lines.__contains__(name):
 
-                        response = responseFormatter("404 Not Found", "title", f"Room {name} does not exist")
+                        response = responseFormatter("404 Not Found", "Room Remove", f"Room {name} does not exist")
                         conn.sendall(response)
                     else:
                         print("The room name is  exist")                                        
@@ -75,10 +75,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             file.write("\n")
                         file.close()
 
-                        response = responseFormatter("200 OK", "title", f"Room {name} is removed")             
+                        response = responseFormatter("200 OK", "Room Removed", f"Room {name} is removed")             
                         conn.sendall(response)
                 else:
-                    response = responseFormatter("404 Not Found", "title", f"Room {name} is not exist")
+                    response = responseFormatter("404 Not Found", "Not Found", f"Room {name} is not exist")
                     conn.sendall(response)
             elif funcType == "/reserve":
                 if os.path.exists('rooms.txt'):  
@@ -101,7 +101,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                     print("controlForRoom",controlForRoom)
                     if(controlForRoom == 0):   
-                        response = responseFormatter("404 Not Found", "title", f"Room {roomname} does not exist")
+                        response = responseFormatter("404 Not Found", "Not Found", f"Room {roomname} does not exist")
                         conn.sendall(response)
                     else:
                         if(roomname == "" or int(day)>7 or int(day)<0 or int(hour)<9 or int(hour)+duration-1>17): #invalid input check
@@ -204,7 +204,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                             ## bu alttaki else ve onun altındaki elif ne işe yarıyor, gereksiz olma ihtimali var      
                             else:
-                                response = responseFormatter("200 OK", "title", f"Room {roomname} is available")
+                                response = responseFormatter("200 OK", "Availability", f"Room {roomname} is available")
                                 conn.sendall(response)
             elif funcType == "/get": #listavailability?room=roomname
                 print("-------get request to room server-------")
@@ -222,13 +222,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         break
                 if isExist==False:
                     print("The room name is not exist")
-                    response = responseFormatter("404 Not Found", "title", f"Room {roomname} does not exist")
+                    response = responseFormatter("404 Not Found", "Not Found", f"Room {roomname} does not exist")
                     conn.sendall(response)
                 else:
                     response = responseFormatter("200 OK", "title", "Room is exist")
                     conn.sendall(response)
             else:
-                response = responseFormatter("400 Bad Request", "title", "Invalid input")
+                response = responseFormatter("400 Bad Request", "Bad Request", "Invalid input")
                 conn.sendall(response)
 
 

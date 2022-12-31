@@ -1,5 +1,6 @@
 import socket
 import os.path
+from splitOperations import *
 
 HOST = "localhost"
 PORT = 8082
@@ -38,7 +39,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     for line in file:
                         if(name == line.strip()):
                             # print("The activity name is already exist 403 atilcak")
-                            conn.sendall(b"HTTP/1.1 403 Forbidden\n")
+                            response = responseFormatter("403 Forbidden", "Already", f"Activity {name} already exist.")
+                            conn.sendall(response)
+                            #conn.sendall(b"HTTP/1.1 403 Forbidden\n")
                             control = 1
                             break
                     file.close()
@@ -47,10 +50,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     file = open("activities.txt", 'a')
                     file.write(name)
                     file.write("\n")
-                    conn.sendall(
-                        b"HTTP/1.1 200 OK\n" +
-                        b"Content-Type: text/html\n" +
-                        b"\n")
+                    response = responseFormatter("200 OK", "Add Activity", f"Activity {name} is added.")
+                    conn.sendall(response)
                     # print("The activity name is added to the file")
                     file.close()
 
@@ -64,13 +65,19 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     file.close()
 
                     if not lines.__contains__(name):
-                        conn.sendall(b"HTTP/1.1 403 Forbidden\n")
+                        response = responseFormatter("403 Forbidden", "Remove Activity", f"Activity {name} does not exist.")
+                        conn.sendall(response)
+                        #conn.sendall(b"HTTP/1.1 403 Forbidden\n")
                         # print("The activity name is  not exist")
                     else:
+                        response = responseFormatter("200 OK", "Remove Activity", f"Activity {name} is removed successfully.")
+                        conn.sendall(response)
+                        """
                         conn.sendall(
                             b"HTTP/1.1 200 OK\n" +
                             b"Content-Type: text/html\n" +
                             b"\n")
+                        """
                         # print("The activity name is  exist")
 
                         file = open("activities.txt", 'w')
@@ -81,7 +88,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             file.write("\n")
                         file.close()
                 else:
-                    conn.sendall(b"HTTP/1.1 404 Not Found\n")
+                    response = responseFormatter("403 Forbidden", "Remove Activity", f"Activity {name} already exist")
+                    conn.sendall(response)
+                    #conn.sendall(b"HTTP/1.1 404 Not Found\n")
                     # print("file not exists.")
 
             elif funcType == "/check":
@@ -91,20 +100,30 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     file = open("activities.txt", 'r')
                     for line in file:
                         if(line.strip() == name):
+                            response = responseFormatter("200 OK", "Check Activity", f"Activity {name} exists")
+                            conn.sendall(response)
+                            """
                             conn.sendall(
                                 b"HTTP/1.1 200 OK\n" +
                                 b"Content-Type: text/html\n" +
                                 b"\n")
+                            """
                             print("There exists activity")
                             control = 1
                             break
                     if(control == 0):
-                        conn.sendall(b"HTTP/1.1 404 Not Found\n")
+                        response = responseFormatter("404 Not Found", "Check Activity", f"Activity {name} does not exist")
+                        conn.sendall(response)
+                        #conn.sendall(b"HTTP/1.1 404 Not Found\n")
                         # print("not found 404 dön")
                     file.close()
                 else:
-                    conn.sendall(b"HTTP/1.1 404 Not Found\n")
+                    response = responseFormatter("404 Not Found", "Check Activity", f"404 Not Found")
+                    conn.sendall(response)
+                    #conn.sendall(b"HTTP/1.1 404 Not Found\n")
                     # print("file not exists.")
 
             else:
-                conn.sendall(b"HTTP/1.1 400 Bad Request\n")
+                response = responseFormatter("400 Bad Request", "Bad Request", f"Bad Request")
+                conn.sendall(response)
+                #conn.sendall(b"HTTP/1.1 400 Bad Request\n")
