@@ -204,11 +204,21 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             elif funcType == "/display": #/display?id=reservation_id:
                 print("------ display -------")
                 endPoints = url.split("?")[1]
-                id = endPoints.split("=")[1]
+                id = name.split(" ")[0]
                 print("id: ", id)
                 with open("reservations.txt", "r") as reservations:
                     for line in reservations:
                         if line.split(" ")[0] == id:
+                            arr = line.split(" ")
+                            duration = 1
+                            if(arr[5] == "\n"):
+                                duration = 1
+                            else:
+                                duration = int(arr[-2])-int(arr[4])
+                            print(arr)
+                            response = responseFormatter("200 OK", "Display", f"Reservation ID: {id}, Room: {line.split(' ')[1]}, Activity: {line.split(' ')[2]}, When: day{line.split(' ')[3]} {line.split(' ')[4]}:00 - {str(int(arr[4])+duration)}:00")
+                            conn.sendall(response)
+                            """
                             conn.sendall(b"HTTP/1.1 200 OK\n"+
                                          b"&id=" + line.split(" ")[0].encode()+
                                          b"&roomname=" + line.split(" ")[1].encode()+
@@ -216,11 +226,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                          b"&day=" + line.split(" ")[3].encode()+
                                          b"&hour=" + line.split(" ")[4].encode()+
                                          b"&until=" + line.split(" ")[-1].encode())
+                            """
                             # 1 emine act1 6 13 14 15 16 
                             print("200 from display")
                             break
                     else:
-                        conn.sendall(b"HTTP/1.1 404 Not Found\n")
+                        response = responseFormatter("404 Not Found", "Display", f"Reservation ID {id} does not exist.")
+                        conn.sendall(response)
                         print("404 from display")
             else:
                 response = responseFormatter("400 Bad Request", "Welcome", "Welcome to our reservation server, please type proper commands in the URL bar.")
