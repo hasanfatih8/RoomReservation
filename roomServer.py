@@ -18,6 +18,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             print(f"Connected by {addr}")
            
             data = conn.recv(1024) # take the first 1024 byte, other than that can be junk
+            decodedData = data.decode()
+            lines = decodedData.split("\r\n")
 
             if not data:
                 break
@@ -155,7 +157,17 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 if os.path.exists('rooms.txt'):
                     roomname = name.split("&")[0].strip()
                     endpoints = requestLine.split("?")[1]
-                    day = endpoints.split("&")[1].split("=")[1].strip()
+
+                    cacheFlag = False
+                    for line in lines:
+                        if line.startswith("Cache-Control:"):
+                            cache_control = line.split(":", 1)[1].strip()
+                            day = line.split("=")[1].split(" ")[0]
+                            cacheFlag = True
+                            break
+                    
+                    if cacheFlag == False:
+                        day = endpoints.split("&")[1].split("=")[1].strip()
                     reservedHours = []
                     controlForRoom = 0
                     rooms = open("rooms.txt", 'r')
@@ -221,7 +233,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         isExist=True                       
                         break
                 if isExist==False:
-                    print("The room name is not exist")
+                    print("The room name does not exist")
                     response = responseFormatter("404 Not Found", "Not Found", f"Room {roomname} does not exist")
                     conn.sendall(response)
                 else:
