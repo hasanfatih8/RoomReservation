@@ -22,13 +22,16 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             data = conn.recv(1024)
             if not data:
                 break
+            # Check if the request is for the favicon
+            if b"favicon.ico" in data:
+            # Ignore the request and do not send a response
+                pass
             url = data.decode("utf-8")
             print("The url is", url)
 
-            funcType = url.split("?")[0]
-            print("The functype is", funcType)
-
-            name = url.split("?")[1].split("=")[1]
+            requestLine,funcType,name=splitURL(url)
+            print("The request line is", requestLine)
+            print("The function type is", funcType)
             print("The name is", name)
 
             if funcType == "/add":
@@ -70,8 +73,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         #conn.sendall(b"HTTP/1.1 403 Forbidden\n")
                         # print("The activity name is  not exist")
                     else:
-                        response = responseFormatter("200 OK", "Remove Activity", f"Activity {name} is removed successfully.")
-                        conn.sendall(response)
                         """
                         conn.sendall(
                             b"HTTP/1.1 200 OK\n" +
@@ -87,6 +88,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             file.write(line)
                             file.write("\n")
                         file.close()
+                        response = responseFormatter("200 OK", "Remove Activity", f"Activity {name} is removed successfully.")
+                        conn.sendall(response)
                 else:
                     response = responseFormatter("403 Forbidden", "Remove Activity", f"Activity {name} already exist")
                     conn.sendall(response)
@@ -124,6 +127,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     # print("file not exists.")
 
             else:
-                response = responseFormatter("400 Bad Request", "Bad Request", f"Bad Request")
+                response = responseFormatter("400 Bad Request", "Bad Request", f"Bad Requestxd")
                 conn.sendall(response)
                 #conn.sendall(b"HTTP/1.1 400 Bad Request\n")

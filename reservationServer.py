@@ -67,23 +67,31 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 # checks activity 
                 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketOfActivityServer:
                     socketOfActivityServer.connect((HOST, 8082))                        
-                    socketOfActivityServer.sendall(b"/check?name="+ activityName.encode())
+                    socketOfActivityServer.sendall(b"GET /check?name="+ activityName.encode() +
+                                                   b" HTTP/1.1")
                     response = socketOfActivityServer.recv(1024).decode("utf-8")
                     print(response.split(" ")[1])
                     socketOfActivityServer.close()                    
                     if response.split(" ")[1].strip() == "404":
-                        conn.sendall(b"HTTP/1.1 404 Not Found\n")
+                        response = responseFormatter("404 Not Found", "Activity Check", f"404 Not Found")
+                        conn.sendall(response)    
+                        #conn.sendall(b"HTTP/1.1 404 Not Found\n")
                         print("404 come from activity server")
                     
                     elif response.split(" ")[1].strip() == "200":                                              
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketOfRoomServer:
                             socketOfRoomServer.connect((HOST, 8081))                                  
-                            socketOfRoomServer.sendall(b"/reserve?room="+roomName.encode() +
-                                            b"&day=" + str(day).encode() +
-                                            b"&hour=" + str(hour).encode() +
-                                            b"&duration=" + str(duration).encode())
+                            socketOfRoomServer.sendall(b"GET /reserve?room="+roomName.encode() +
+                                                       b"&day=" + str(day).encode() +
+                                                       b"&hour=" + str(hour).encode() +
+                                                       b"&duration=" + str(duration).encode() + 
+                                                       b" HTTP/1.1")
 
                             response = socketOfRoomServer.recv(1024).decode("utf-8")
+                            print("Received from room server: ", response)    
+                            print("Received from room server: ", response)    
+                            print("Received from room server: ", response)    
+                            print("Received from room server: ", response)    
                             print("Received from room server: ", response)    
                             responseStatus=  response.split(" ")[1].strip()                                
                             socketOfRoomServer.close()
@@ -109,21 +117,21 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                                 conn.sendall(b"HTTP/1.1 200 OK")
             
-            elif funcType == "/listavailability": #/listavailability?room=roomname&day=x:
-                print("------ listavailability -------")
-                
-                #name = name.split("?")[1].split("&")[0]
-                #day = int(url.split("=")[1])
-                
-                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketOfRoomServer:
-                    socketOfRoomServer.connect((HOST, 8081))                                    
-
-                    socketOfRoomServer.sendall(b"/get?room=emine")
-                    response = socketOfRoomServer.recv(1024).decode("utf-8")
-                    print("Received from room server: ", response)   
-
-                    socketOfRoomServer.close()
-
+            #elif funcType == "/listavailability": #/listavailability?room=roomname&day=x:
+            #    print("------ listavailability -------")
+            #    
+            #    #name = name.split("?")[1].split("&")[0]
+            #    #day = int(url.split("=")[1])
+            #    
+            #    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketOfRoomServer:
+            #        socketOfRoomServer.connect((HOST, 8081))                                    
+            #
+            #        socketOfRoomServer.sendall(b"/get?room=emine")
+            #        response = socketOfRoomServer.recv(1024).decode("utf-8")
+            #        print("Received from room server: ", response)   
+            #
+            #        socketOfRoomServer.close()
+            
             elif funcType == "/listavailability":    #/listavailability?room=roomname               
                 print ("------ listavailability -------")
                 endPoints = url.split("?")[1]
