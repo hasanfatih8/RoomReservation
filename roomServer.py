@@ -3,24 +3,30 @@ import os.path
 
 from splitOperations import *
 
+# Inditcate localhost and port number
 HOST = "localhost"
 PORT = 8081
 
-
+# With command, we don't need to use try catch blocks
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s: 
-
+    # bind the socket to the host and port
     s.bind((HOST, PORT)) 
     s.listen() # if you put any number in this function ex: 5, it means that it will listen 5 connections after that it is going to throw an error
     while True:
-        conn, addr = s.accept() #connection object will be stored in conn, list of ip addresses will be storedin addr
+        # Connection object will be stored in conn, list of ip addresses will be storedin addr 
+        conn, addr = s.accept() 
 
         with conn:
             print(f"Connected by {addr}")
-           
-            data = conn.recv(1024) # take the first 1024 byte, other than that can be junk
+
+            # take the first 1024 byte, other than that can be junk
+            data = conn.recv(1024) 
+
+            # For cache control, decode another data and split it
             decodedData = data.decode()
             lines = decodedData.split("\r\n")
 
+            # Check if the data is empty
             if not data:
                 break
             # Check if the request is for the favicon
@@ -29,22 +35,25 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                 pass
             url= data.decode("utf-8")
             print("The url is", url)
-          
+            
+            # Split the url and get the request line, function type and name
             requestLine,funcType,name=splitURL(url)           
 
+            # Add the room to server
             if funcType == "/add":
                 isExists = 0
                 if os.path.exists('rooms.txt'):
                     lines = []
                     file = open("rooms.txt", 'r')                      
                     for line in file:
+                        # If the room is already exist, send 400 error
                         if(name == line.strip()):                                                        
                             response = responseFormatter("400 Bad Request", "Room Add", f"Room {name} is already exist")              
                             conn.sendall(response)
                             isExists = 1
                             file.close()
                             break
-                        
+                # If the room is not exist, add the room to server and return 200 OK
                 if(isExists == 0):
                     file = open("rooms.txt", 'a')                   
                     file.write(name)
@@ -54,6 +63,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     conn.sendall(response)
 
                     file.close()
+                    
             # Remove the room from server        
             elif funcType == "/remove":
                 # Read the file and check if the room is exist
@@ -194,15 +204,18 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     rooms.close()
                     if(controlForRoom == 0):
                         #print("room not found 404 atilcak ROOM YOK ROOMS TXT DE")
+                        # If room does not exist, send 404 error
                         response = responseFormatter("404 Not Found", "Not Found", f"Room {roomname} does not exist")
                         conn.sendall(response)
-
+                    # If room exists, check if the room is already reserved for the given time
                     else:
-                        if(int(day)>7 or int(day)<0): #invalid input check
+                        # Check if the input is valid
+                        if(int(day)>7 or int(day)<0): 
                            # print("invalid input for day number /// 400 atilcak")
                             response = responseFormatter("400 Bad Request", "Invalid Input", "Invalid input")
                             conn.sendall(response)
                         else:
+                            # Check if the room is already reserved for the given time
                             if os.path.exists('reservations.txt'):
                                 roomsFile = open("reservations.txt", "r")
                                 for line in roomsFile:    # finds reserved hours
@@ -212,12 +225,14 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                         for i in range(0,hoursLength):
                                             reservedHours.append(elements[i + 2].strip())
                                 roomsFile.close()
+                                # Find available hours
                                 availableHours = []
                                 availableHoursReturn = ""
                                 for i in range(0,9):    # finds available hours
+                                    # If the hour is not reserved, add it to the available hours list
                                     if(str(i+9) not in reservedHours):
                                         availableHours.append(i+9)
-
+                                # Format the available hours list
                                 for i in availableHours:
                                     availableHoursReturn += str(i) + " "
                                 '''
@@ -226,7 +241,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                              b"\n" + availableHoursReturn.encode()) 
                                 '''
                                 print("available hours: ", availableHours)
-
+                                # Send the available hours to the reservation server
                                 response = responseFormatter("200 OK","Availabiity",f"For room {roomname} available hours at day {day}  are {availableHoursReturn}")
                                 conn.sendall(response)
 
@@ -235,9 +250,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                 response = responseFormatter("200 OK", "Availability", f"Room {roomname} is available")
                                 conn.sendall(response)
             elif funcType == "/get": #listavailability?room=roomname
-                print("-------get request to room server-------")
-                
-                
                 
                 print ("Reservation server want to get information about room: ",name)
                 rooms = open("rooms.txt", 'r')

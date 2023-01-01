@@ -1,6 +1,6 @@
 
 def splitURL(url)          :
-    
+    # split the url to get the function type and the name
     requestLine=url.split("\n")[0]     
     funcType= requestLine.split("?")[0].split(" ")[1]
     
@@ -10,9 +10,9 @@ def splitURL(url)          :
     else: 
         name=requestLine.split(" ")[1].split("=")[1]    
 
-
-
+    # check the name is end with ~
     if name[-1] == "~":
+        # remove the ~
         name = name[:-1]
     requestLine = requestLine.split(" ")[1]
     return requestLine,funcType,name
