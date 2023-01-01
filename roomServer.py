@@ -54,7 +54,9 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     conn.sendall(response)
 
                     file.close()
+            # Remove the room from server        
             elif funcType == "/remove":
+                # Read the file and check if the room is exist
                 if os.path.exists('rooms.txt'):
                     lines = []
                     file = open("rooms.txt", 'r')
@@ -63,10 +65,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     file.close()
                     for line in lines:
                         print(line)
+                    # If the room is not exist, send 404 error
                     if not lines.__contains__(name):
 
                         response = responseFormatter("404 Not Found", "Room Remove", f"Room {name} does not exist")
                         conn.sendall(response)
+                    # If the room is exist, remove the room from server and return 200 OK
                     else:
                         print("The room name is  exist")                                        
                         file = open("rooms.txt", 'w')
@@ -79,12 +83,14 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
                         response = responseFormatter("200 OK", "Room Removed", f"Room {name} is removed")             
                         conn.sendall(response)
+                # If the file is not exist, send 404 error        
                 else:
                     response = responseFormatter("404 Not Found", "Not Found", f"Room {name} is not exist")
                     conn.sendall(response)
+            # Reserve the room for the given time        
             elif funcType == "/reserve":
                 if os.path.exists('rooms.txt'):  
-                    
+                    # Split the request line to get the room name, day, hour and duration
                     roomname = name.split("&")[0].strip()
                     endpoints = requestLine.split("?")[1]
                     day = endpoints.split("&")[1].split("=")[1].strip()
@@ -92,6 +98,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     duration = int(endpoints.split("&")[3].split("=")[1].strip())
 
                     print("roomname",roomname,"day",day,"hour",hour,"duration",duration)
+                    # Check if the room is exist
                     controlForRoom = 0
                     rooms = open("rooms.txt", 'r')    
                     for line in rooms:  # checks whether room exists or not BU LAZIM MI EMİN DEĞİLİM
@@ -102,35 +109,40 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     rooms.close()
 
                     print("controlForRoom",controlForRoom)
+                    # If the room does not exist, send 404 error
                     if(controlForRoom == 0):   
                         response = responseFormatter("404 Not Found", "Not Found", f"Room {roomname} does not exist")
                         conn.sendall(response)
+                    # If the room exists, check if the room is already reserved for the given time
                     else:
+                        # Check if the input is valid
                         if(roomname == "" or int(day)>7 or int(day)<0 or int(hour)<9 or int(hour)+duration-1>17): #invalid input check
                             print("invalid input 400 atilcak")
                             
                             response = responseFormatter("400 Bad Request", "Invalid Input", "Invalid input")
                             conn.sendall(response)
+                        # If the input is valid, check if the room is already reserved for the given time
                         else:
                             isReserved = 0 #if room already reserved sets to 1
                             if os.path.exists('reservations.txt'):
                                 print("reservations.txt exists")
                                 reservationFileRead = open("reservations.txt", "r")
 
-
+                                # Check if the room is already reserved for the given time
                                 for line in reservationFileRead:
                                     print("line",line)
                                     elements = line.split(" ")
-
+                                    # 
                                     if(elements[1] == roomname and elements[3] == day):
                                         hoursLength = len(elements) - 4                       
 
-                                        for i in range(0,hoursLength): #if starting hour of new reservation matches with other reservation                                                   
+                                        # If starting hour of new reservation matches with other reservation
+                                        for i in range(0,hoursLength):                                                    
                                             if(elements[i + 4].strip() == hour):
                                                 isReserved = 1     
                                                 break
-
-                                        for j in range(0,hoursLength): #if end hour of new reservation matches with other reservation                                                                            
+                                        # If starting hour of new reservation is between other reservation
+                                        for j in range(0,hoursLength):                                                                             
                                             if(elements[j + 4].strip() == str(int(hour) + duration - 1)):
                                                 isReserved = 1     
                                                 break
@@ -138,26 +150,29 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                         break
                                 reservationFileRead.close()
 
-                                
-
                             print("isReserved",isReserved)
+                            # If the room is already reserved for the given time, send 403 error
                             if(isReserved == 1):
                                 print("already reserved 403 atilcak")
                                 response = responseFormatter("403 Forbidden", "Already reserved", f"Room {roomname} is already reserved")
                                 conn.sendall(response)
+
+                            # If the room is not reserved for the given time, reserve the room for the given time
                             else:
                                 print("reserved 200 atilcak")
                                 response = responseFormatter("200 OK", "Reservation Confirm", f"Room {roomname} is reserved")
                                 conn.sendall(response)
-                            
+                # If room does not exist, send 404 error         
                 else:
                     response = responseFormatter("404 Not Found", "Not Found", f"Room {roomname} does not exist")
                     conn.sendall(response)
+            # Check availability for the given room
             elif funcType == "/checkavailability":
                 if os.path.exists('rooms.txt'):
                     roomname = name.split("&")[0].strip()
                     endpoints = requestLine.split("?")[1]
-
+                    # Check if reservation server is sending consecutive requests, if yes,
+                    # Then it means reservation server wants to check availability for specified day. 
                     cacheFlag = False
                     for line in lines:
                         if line.startswith("Cache-Control:"):
@@ -165,9 +180,10 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             day = line.split("=")[1].split(" ")[0]
                             cacheFlag = True
                             break
-                    
+                    # Check availability for specified day
                     if cacheFlag == False:
                         day = endpoints.split("&")[1].split("=")[1].strip()
+                    # Track the reserved hours in a list
                     reservedHours = []
                     controlForRoom = 0
                     rooms = open("rooms.txt", 'r')
