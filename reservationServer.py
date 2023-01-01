@@ -1,6 +1,8 @@
 import socket
 import os
 from splitOperations import *
+import time
+
 
 HOST = "localhost"
 PORT = 8080
@@ -36,6 +38,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             data = conn.recv(1024) # take the first 1024 byte, other than that can be junk
             if not data:
                 break
+            
+            # Check if the request is for the favicon
+            if b"favicon.ico" in data:
+            # Ignore the request and do not send a response
+                pass
+            
             url= data.decode("utf-8")
             print("The url is", url)
             
@@ -153,53 +161,82 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         response = socketOfRoomServer.recv(1024).decode("utf-8")
                         print("Received from room server: ", response)    
                         responseStatus =  response.split(" ")[1].strip()                                
-                        socketOfRoomServer.close()
+                        
+                        bodyText = response.split("\n")[4].split("<body>")[1].split("</body>")[0]
 
                         if  responseStatus== "403":                   #maybe except 200 are unnecessary                                         
-                            conn.sendall(b"HTTP/1.1 403 Forbidden\n") 
-                            print("403 from room") 
-                        elif responseStatus == "404":
-                            conn.sendall(b"HTTP/1.1 404 Not Found\n")
-                            print("404 from room")
-                        elif responseStatus == "400":
-                            conn.sendall(b"HTTP/1.1 400 Bad Request\n") 
-                            print("400 from room")
-                        elif responseStatus == "200":
-                            conn.sendall(b"HTTP/1.1 200 OK\n" + response.encode())
-                else:
-                    roomName = endPoints.split("=")[1]
-                    print ("roomName: ", roomName)
-                    for day in range(1,8):
-                        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketOfRoomServer:
-                            socketOfRoomServer.connect((HOST, 8081))      
-                                            
-                            socketOfRoomServer.sendall(b"GET /checkavailability?room="+roomName.encode() + 
-                                                       b"&day=" + str(day).encode() +
-                                                       b" HTTP/1.1")
-                            """
-                            # Build the query string
-                            query_string = "room=" + roomName + "&day=" + str(day)
-                            # Build the GET request
-                            request = "GET /checkavailability?" + query_string + " HTTP/1.1\r\n"
-                            # Send the request
-                            socketOfRoomServer.sendall(request.encode())
-                            """  
-                            response = socketOfRoomServer.recv(1024).decode("utf-8")
-                            print("Received from room server: ", response)    
-                            responseStatus=  response.split(" ")[1].strip()                                
-                            socketOfRoomServer.close()
+                            
+                            print("403 from room")
+                            response = responseFormatter("403 Forbidden", "Room Check", f"403 Forbidden")                            
 
-                            if  responseStatus== "403":
-                                conn.sendall(b"HTTP/1.1 403 Forbidden\n") 
-                                print("403 from room") 
-                            elif responseStatus == "404":
-                                conn.sendall(b"HTTP/1.1 404 Not Found\n")
-                                print("404 from room")
-                            elif responseStatus == "400":
-                                conn.sendall(b"HTTP/1.1 400 Bad Request\n") 
-                                print("400 from room")
-                            elif responseStatus == "200":
-                                conn.sendall(b"HTTP/1.1 200 OK\n" + response.encode())
+                        elif responseStatus == "404":
+                            print("404 from room")
+                            response = responseFormatter("404 Not Found", "Room Check", f"404 Not Found")   
+                            
+                        elif responseStatus == "400":                        
+                            print("400 from room")
+                            response = responseFormatter("400 Bad Request", "Room Check", f"400 Bad Request")
+                            
+                        elif responseStatus == "200":
+                            response = responseFormatter("200 OK", "Available Hours", bodyText)
+                            
+                        else:
+                            response = responseFormatter("400 Bad Request", "Room Check", f"400 Bad Request")
+                            
+                        conn.sendall(response)
+                        socketOfRoomServer.close()
+                else:
+                    
+                    roomName = endPoints.split(" ")[0].split("=")[1]
+                    print ("roomName: ", roomName)
+                    bodyText=""   
+                    for day in range(1, 8):
+                        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as socketOfRoomServer:
+                                socketOfRoomServer.connect((HOST, 8081))                                                                                                                         
+                                socketOfRoomServer.sendall(b"GET /checkavailability?room="+roomName.encode() + 
+                                                        b"&day=" + str(day).encode() +
+                                                        b" HTTP/1.1")  
+                                                                                          
+                                responseText = socketOfRoomServer.recv(1024).decode("utf-8")
+                                print("Received from room server: ", responseText)    
+                                responseStatus = responseText.split(" ")[1].strip()
+                                print("responseStatus: ", responseStatus)
+                                                   
+                               
+                                
+                                if  responseStatus== "403":
+                                    response = responseFormatter("403 Forbidden", "Room Check", f"403 Forbidden")
+                                    break
+
+                                elif responseStatus == "404":
+                                    response = responseFormatter("404 Not Found", "Room Check", f"404 Not Found")
+                                    break
+                                    
+                                elif responseStatus == "400":
+                                    response = responseFormatter("400 Bad Request", "Room Check", f"400 Bad Request")
+                                    break
+                                    
+                                elif responseStatus == "200":
+                                    print("200 from room for day: ", day)
+                                    bodyText += responseText.split("\n")[4].split("<body>")[1].split("</body>")[0].strip() + "\n"
+                                    print("bodyText: ", bodyText)
+                                    response = responseFormatter("200 OK", "Available Hours", f"{bodyText}")    
+                                                                                                          
+                                else:
+                                    response = responseFormatter("400 Bad Request", "Room Check", f"400 Bad Request") 
+                                    break                                   
+
+                                socketOfRoomServer.close()
+                    
+                    print("bodyText: ", bodyText)      
+                                                                                                  
+                    # give hello world response
+                    conn.sendall(response)
+
+
+                            
+                            
+
 
             elif funcType == "/display": #/display?id=reservation_id:
                 print("------ display -------")

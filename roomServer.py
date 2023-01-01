@@ -158,6 +158,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     roomname = name.split("&")[0].strip()
                     endpoints = requestLine.split("?")[1]
 
+                    print ("1")
                     cacheFlag = False
                     for line in lines:
                         if line.startswith("Cache-Control:"):
@@ -165,28 +166,30 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             day = line.split("=")[1].split(" ")[0]
                             cacheFlag = True
                             break
-                    
+                    print ("2")
                     if cacheFlag == False:
                         day = endpoints.split("&")[1].split("=")[1].strip()
                     reservedHours = []
                     controlForRoom = 0
                     rooms = open("rooms.txt", 'r')
+                    print ("3")
                     for line in rooms:  # checks whether room exists or not
                         if line.strip() == roomname:
                             controlForRoom = 1
                             break
                     rooms.close()
+                    print ("4")
                     if(controlForRoom == 0):
                         #print("room not found 404 atilcak ROOM YOK ROOMS TXT DE")
                         response = responseFormatter("404 Not Found", "Not Found", f"Room {roomname} does not exist")
-                        conn.sendall(response)
-
+                        conn.sendall(response)                    
                     else:
                         if(int(day)>7 or int(day)<0): #invalid input check
                            # print("invalid input for day number /// 400 atilcak")
                             response = responseFormatter("400 Bad Request", "Invalid Input", "Invalid input")
                             conn.sendall(response)
                         else:
+                            print ("5")                        
                             if os.path.exists('reservations.txt'):
                                 roomsFile = open("reservations.txt", "r")
                                 for line in roomsFile:    # finds reserved hours
@@ -201,7 +204,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                 for i in range(0,9):    # finds available hours
                                     if(str(i+9) not in reservedHours):
                                         availableHours.append(i+9)
-
+                                print ("6")
                                 for i in availableHours:
                                     availableHoursReturn += str(i) + " "
                                 '''
@@ -211,10 +214,22 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                 '''
                                 print("available hours: ", availableHours)
 
-                                response = responseFormatter("200 OK","Availabiity",f"For room {roomname} available hours at day {day}  are {availableHoursReturn}")
-                                conn.sendall(response)
+                                days = {1: "Monday", 2: "Tuesday", 3: "Wednesday",
+                                        4: "Thursday", 5: "Friday", 6: "Saturday", 7: "Sunday"}
 
-                            ## bu alttaki else ve onun altındaki elif ne işe yarıyor, gereksiz olma ihtimali var      
+                                if int(day) > 0 and int(day) < 8:
+                                     dayName = days[int(day)]
+                                else:
+                                    dayName = "Invalid day number"
+                                print(dayName)
+
+                                print("7")
+                                response = responseFormatter(
+                                    "200 OK", "Availabiity", f"On {dayName}, Room {roomname} is available for the following hours: {availableHoursReturn}")
+                                conn.sendall(response)
+                                print("200 OK atildi")
+                                print("8")
+                            ## bu alttaki else ve onun altındaki elif ne işe yarıyor, gereksiz olma ihtimali var  -- evet gereksiz    
                             else:
                                 response = responseFormatter("200 OK", "Availability", f"Room {roomname} is available")
                                 conn.sendall(response)
