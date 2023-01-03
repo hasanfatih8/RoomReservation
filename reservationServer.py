@@ -26,6 +26,17 @@ def increase_id():
     id += 1
     store_id(id)
 
+def get_day_name(dayNumber):
+    days = {1: "Monday", 2: "Tuesday", 3: "Wednesday",
+            4: "Thursday", 5: "Friday", 6: "Saturday", 7: "Sunday"}
+
+    if int(dayNumber) > 0 and int(dayNumber) < 8:
+        dayName = days[int(dayNumber)]
+    else:
+        dayName = "Invalid day number"
+    return dayName
+
+
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
 
     s.bind((HOST, PORT))
@@ -124,7 +135,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                     reservations.write("\n")
 
                                 increase_id()
-                                response = responseFormatter("200 OK", "Reservation Succesful", f"Room {roomName} is reserved for activity {activityName} on day {day} at {hour} for {duration} hours. \n your Reservation ID: {reservationId}")
+                                response = responseFormatter("200 OK", "Reservation Succesful", f"Room {roomName} is reserved for activity {activityName} on {get_day_name(day)}   at {hour}:00 -  {hour+duration}:00 hours. Your Reservation ID: {reservationId}")
                                 conn.sendall(response)
                                 #conn.sendall(b"HTTP/1.1 200 OK")
             
@@ -218,9 +229,12 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                                     
                                 elif responseStatus == "200":
                                     print("200 from room for day: ", day)
-                                    bodyText += responseText.split("\n")[4].split("<body>")[1].split("</body>")[0].strip() + "\n"
-                                    print("bodyText: ", bodyText)
-                                    response = responseFormatter("200 OK", "Available Hours", f"{bodyText}")    
+                                    bodyText += responseText.split("\n")[4].split("<body>")[1].split("</body>")[0].strip() + "<br>"
+                                    if day == 7:
+                                        print("bodyText: ", bodyText)                                         
+                                        response = responseFormatter("200 OK", "Available Hours", f"{bodyText}")                                                                                                                        
+                                        conn.sendall(response)
+                                        break    
                                                                                                           
                                 else:
                                     response = responseFormatter("400 Bad Request", "Room Check", f"400 Bad Request") 
@@ -253,7 +267,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             else:
                                 duration = int(arr[-2])-int(arr[4])
                             print(arr)
-                            response = responseFormatter("200 OK", "Display", f"Reservation ID: {id}, Room: {line.split(' ')[1]}, Activity: {line.split(' ')[2]}, When: day{line.split(' ')[3]} {line.split(' ')[4]}:00 - {str(int(arr[4])+duration)}:00")
+                            response = responseFormatter("200 OK", "Display", f"Reservation ID: {id}, Room: {line.split(' ')[1]}, Activity: {line.split(' ')[2]}, When: {get_day_name(line.split(' ')[3])}   {line.split(' ')[4]}:00 - {str(int(arr[4])+duration+1)}:00")
                             conn.sendall(response)
                             """
                             conn.sendall(b"HTTP/1.1 200 OK\n"+
@@ -271,6 +285,8 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         response = responseFormatter("404 Not Found", "Display", f"Reservation ID {id} does not exist.")
                         conn.sendall(response)
                         print("404 from display")
+            elif(funcType == "/favicon.ico"):
+                pass
             else:
                 response = responseFormatter("400 Bad Request", "Welcome", "Welcome to our reservation server, please type proper commands in the URL bar.")
                 conn.sendall(response)

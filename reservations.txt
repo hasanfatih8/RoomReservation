@@ -1,10 +1,9 @@
 5 M2ZO9 act1 3 11 
 0 emine act1 4 11 12 13 14 15 
 4 emine act1 5 13 14 15 16 
-6 ahmet act1 5 12 13
-7 ahmet act1 1 14 15
-9 ahmet act1 2 14 15
-8 ahmet act1 3 16 17
 1 emine act1 6 13 14 15 16 
 2 hasancokiyi act2 3 10 
 3 denemece act1 3 10 11 12 
+10 ahmet act1 3 10 11 12 13 14 
+6 ahmet act1 5 12 13 
+7 ahmet act1 1 14 15 
