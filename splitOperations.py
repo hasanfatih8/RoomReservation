@@ -18,7 +18,11 @@ def splitURL(url)          :
     
     # check the function type is /favicon.ico
     if funcType == "/favicon.ico":
-        name = "favicon.ico"
+        # read the referer line from the request
+        name=url.split("Referer: ")[1].split("\n")[0].split("localhost")[1].split("/")[1].split("?")[0]
+        #  add \ to the start of the name
+        name="\\"+name
+        
     
     else: 
         if(requestLine.__contains__(" ")):
