@@ -106,7 +106,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                         response = responseFormatter("404 Not Found", "Not Found", f"Room {roomname} does not exist")
                         conn.sendall(response)
                     else:
-                        if(roomname == "" or int(day)>7 or int(day)<0 or int(hour)<9 or int(hour)+duration-1>17): #invalid input check
+                        if(roomname == "" or int(day)>7 or int(day)<0 or int(hour)<9 or int(hour)+duration-1>17 or duration<=0): #invalid input check
                             print("invalid input 400 atilcak")
                             
                             response = responseFormatter("400 Bad Request", "Invalid Input", "Invalid input")
