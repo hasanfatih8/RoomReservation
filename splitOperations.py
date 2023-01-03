@@ -1,20 +1,43 @@
 
 def splitURL(url)          :
     
-    requestLine=url.split("\n")[0]     
-    funcType= requestLine.split("?")[0].split(" ")[1]
+    if(url.__contains__("\n")):
+        requestLine=url.split("\n")[0]     
+    else:
+        requestLine=url
+
+    if(requestLine.__contains__("?")):
+        funcType= requestLine.split("?")[0]
+        if(funcType.__contains__(" ")):
+            funcType=funcType.split(" ")[1]
+        else:
+            funcType=funcType
+    else:
+        funcType = "/invalid"
+    
     
     # check the function type is /favicon.ico
     if funcType == "/favicon.ico":
         name = "favicon.ico"
+    
     else: 
-        name=requestLine.split(" ")[1].split("=")[1]    
+        if(requestLine.__contains__(" ")):
+            name=requestLine.split(" ")[1]
+            if(name.__contains__("=")):
+                name=name.split("=")[1]
+            else:
+                name=name
+        else:
+            name = "invalid"
 
 
 
     if name[-1] == "~":
         name = name[:-1]
-    requestLine = requestLine.split(" ")[1]
+    if(requestLine.__contains__(" ")):
+        requestLine = requestLine.split(" ")[1]
+    else:
+        requestLine = "invalid"
     return requestLine,funcType,name
 
 

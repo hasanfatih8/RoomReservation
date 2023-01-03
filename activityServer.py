@@ -127,6 +127,6 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                     # print("file not exists.")
 
             else:
-                response = responseFormatter("400 Bad Request", "Bad Request", f"Bad Requestxd")
+                response = responseFormatter("400 Bad Request", "Bad Request", f"Bad Request")
                 conn.sendall(response)
                 #conn.sendall(b"HTTP/1.1 400 Bad Request\n")
