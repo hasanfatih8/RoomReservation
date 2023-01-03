@@ -64,12 +64,13 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             print("The request line is", requestLine)
             print("The function type is", funcType)
 
-            name=url.split("?")[1].split("=")[1] # [0] = id , [1] = reservation_id |||| [0] =
+            #name=url.split("?")[1].split("=")[1] # [0] = id , [1] = reservation_id |||| [0] =
             
-            print("The name is", name)
+            #print("The name is", name)
             # -----------------------------------------------------------------------------------------------------
             if(funcType == "/reserve"):
                 print("---------------------- reserve from reservation server -----------------------------")
+                name=url.split("?")[1].split("=")[1]
                 roomName = name.split("&")[0]
 
                 endPoints = url.split("?")[1]
@@ -255,6 +256,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             elif funcType == "/display": #/display?id=reservation_id:
                 print("------ display -------")
                 endPoints = url.split("?")[1]
+                name=url.split("?")[1].split("=")[1]
                 id = name.split(" ")[0]
                 print("id: ", id)
                 with open("reservations.txt", "r") as reservations:
