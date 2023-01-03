@@ -118,14 +118,16 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
                             responseStatus=  response.split(" ")[1].strip()                                
                             socketOfRoomServer.close()
 
-                        if  responseStatus== "403":                   #maybe except 200 are unnecessary                                         
-                            conn.sendall(b"HTTP/1.1 403 Forbidden\n") 
+                        if  responseStatus== "403":   
+                            response = responseFormatter("403 Forbidden", "Already reserved", f"Room {roomName} is already reserved")                #maybe except 200 are unnecessary                                         
+                            conn.sendall(response) 
                             print("403 from room") 
                         elif responseStatus == "404":
-                            conn.sendall(b"HTTP/1.1 404 Not Found\n")
-                            print("404 from room")
+                            response = responseFormatter("404 Not Found", "Not Found", f"Room {roomName} does not exist")
+                            conn.sendall(response)
                         elif responseStatus == "400":
-                            conn.sendall(b"HTTP/1.1 400 Bad Request\n") 
+                            response = responseFormatter("400 Bad Request", "Invalid Input", "Invalid input")
+                            conn.sendall(response) 
                             print("400 from room")
                         elif responseStatus == "200":
                                 with open("reservations.txt", "a+") as reservations:
