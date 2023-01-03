@@ -1,5 +1,5 @@
-#CSE4074 - Computer Networks - Term Project
-#Socket Programming - HTTP – Based Room Reservation
+# CSE4074 - Computer Networks - Term Project
+# Socket Programming - HTTP – Based Room Reservation
 
 ### Authors:
 
